@@ -1,0 +1,16 @@
+:root {
+  --bar-height: 2.5em;
+}
+
+.ProgressBar {
+  background-color: black;
+  border-radius: calc(var(--bar-height) * .35);
+  height: var(--bar-height);
+  margin: .5em;
+  overflow: hidden;
+}
+
+.ProgressBar-bar {
+  background-color: grey;
+  height: var(--bar-height);
+}

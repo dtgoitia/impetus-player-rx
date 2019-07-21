@@ -1,0 +1,16 @@
+.Button {
+  flex: 1 1 auto;
+  background-color: lightskyblue;
+  border-radius: .5em;
+  margin: .3em;
+  padding: 1em;
+}
+
+.Button:hover {
+  background-color: blue;
+  cursor: pointer;
+}
+
+.Button:active {
+  background-color: yellow;
+}
