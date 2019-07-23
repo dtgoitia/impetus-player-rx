@@ -6,6 +6,7 @@ import { map } from 'rxjs/operators';
 import { calculateDuration, getTask, getNextTask, secondsToTime } from './../utils';
 import Buttons from './Buttons';
 import ProgressBar from './ProgressBar';
+import TaskLog from './TaskLog';
 import { SAMPLE_PRESET, PLAYER_STEPS_PER_SECOND, MILLISECONDS_PER_SECOND } from './../constants';
 import './Player.css';
 
@@ -13,11 +14,12 @@ class Player extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
+      completedTasks: [],
+      currentTask: getTask(SAMPLE_PRESET, 0),
       currentTime: 0,
       duration: calculateDuration(SAMPLE_PRESET),
-      currentTask: getTask(SAMPLE_PRESET, 0),
-      nextTask: getNextTask(SAMPLE_PRESET, 0),
       endReached: false,
+      nextTask: getNextTask(SAMPLE_PRESET, 0),
     }
   }
 
@@ -53,6 +55,8 @@ class Player extends React.Component {
           pause={this.pause.bind(this)}
           play={this.play.bind(this)}
           stop={this.stop.bind(this)} />
+        
+        <TaskLog tasks={this.state.completedTasks} />
       </div>
     );
   }
@@ -64,7 +68,14 @@ class Player extends React.Component {
 
     this.subscription = this.createTimerFrom(this.state.currentTime)
       .subscribe(time => {
+        const lastTask = this.state.currentTask;
         const currentTask = getTask(SAMPLE_PRESET, time);
+        const nextTask = getNextTask(SAMPLE_PRESET, time);
+        const completedTasks = this.state.completedTasks;
+
+        if (this.isTaskCompleted(lastTask, currentTask)) {  // TODO: think of a valid condition...
+          completedTasks.push(lastTask);
+        }
 
         if (currentTask === null) {
           // stop timer when there are no more tasks
@@ -75,8 +86,9 @@ class Player extends React.Component {
 
         this.setState({
           currentTime: time,
-          currentTask: getTask(SAMPLE_PRESET, time),
-          nextTask: getNextTask(SAMPLE_PRESET, time),
+          currentTask,
+          nextTask,
+          completedTasks,
         });
       });
   }
@@ -111,6 +123,11 @@ class Player extends React.Component {
   stop() {
     this.cleanUpSubscriptions();
     this.resetPlayer();
+  }
+
+  isTaskCompleted(lastTask, currentTask) {
+    return (lastTask !== null && currentTask == null)
+      || (lastTask.name !== currentTask.name);
   }
 }
 
