@@ -1,35 +1,34 @@
 import React from 'react';
 
-import { timer } from 'rxjs';
-import { map } from 'rxjs/operators';
-
-import { calculateDuration, getTask, getNextTask, secondsToTime } from './../utils';
+import { secondsToTime } from './../utils';
 import Buttons from './Buttons';
+import playerService from './player-service';
 import ProgressBar from './ProgressBar';
 import TaskLog from './TaskLog';
-import { SAMPLE_PRESET, PLAYER_STEPS_PER_SECOND, MILLISECONDS_PER_SECOND } from './../constants';
 import './Player.css';
 
 class Player extends React.Component {
   constructor(props) {
     super(props);
+    this.service = playerService;
     this.state = {
+      tasks: this.service.task,
       completedTasks: [],
-      currentTask: getTask(SAMPLE_PRESET, 0),
+      currentTask: this.service.currentTask,
       currentTime: 0,
-      duration: calculateDuration(SAMPLE_PRESET),
+      presetDuration: this.service.presetDuration,
       endReached: false,
-      nextTask: getNextTask(SAMPLE_PRESET, 0),
+      nextTask: this.service.nextTask,
     }
   }
 
   componentWillUnmount() {
-    this.cleanUpSubscriptions();
+    this.cleanUpSubscription();
   }
 
   render() {
     const formattedTime = secondsToTime(this.state.currentTime);
-    const progress = this.state.currentTime / this.state.duration;
+    const progress = this.state.currentTime / this.state.presetDuration;
 
     return (
       <div className="Player">
@@ -54,80 +53,59 @@ class Player extends React.Component {
         <Buttons
           pause={this.pause.bind(this)}
           play={this.play.bind(this)}
-          stop={this.stop.bind(this)} />
+          stop={this.stop.bind(this)}
+          restart={this.restartTask.bind(this)} />
         
         <TaskLog tasks={this.state.completedTasks} />
       </div>
     );
   }
 
-  play() {
-    if (this.state.endReached) {
-      this.setState({ endReached: false });
-    }
-
-    this.subscription = this.createTimerFrom(this.state.currentTime)
-      .subscribe(time => {
-        const lastTask = this.state.currentTask;
-        const currentTask = getTask(SAMPLE_PRESET, time);
-        const nextTask = getNextTask(SAMPLE_PRESET, time);
-        const completedTasks = this.state.completedTasks;
-
-        if (this.isTaskCompleted(lastTask, currentTask)) {  // TODO: think of a valid condition...
-          completedTasks.push(lastTask);
-        }
-
-        if (currentTask === null) {
-          // stop timer when there are no more tasks
-          this.cleanUpSubscriptions();
-          this.setState({ endReached: true });
-          return;
-        }
-
-        this.setState({
-          currentTime: time,
-          currentTask,
-          nextTask,
-          completedTasks,
-        });
-      });
-  }
-
-  createTimerFrom(startTime) {
-    const millisecondsPerStep = MILLISECONDS_PER_SECOND / PLAYER_STEPS_PER_SECOND;
-
-    return timer(0, millisecondsPerStep)
-      .pipe(
-        map(stepIndex => startTime + stepIndex / PLAYER_STEPS_PER_SECOND),
-      );
-  }
-
-  cleanUpSubscriptions() {
+  cleanUpSubscription() {
     if (!!this.subscription && !this.subscription.closed) {
       this.subscription.unsubscribe();
     }
   }
 
+  play() {
+    this.service.play();
+    this.subscription = this.service
+      .timerState$
+      .subscribe(state => {
+        if (state) {
+          this.setState({
+            currentTime: state.time,
+            currentTask: state.currentTask,
+            nextTask: state.nextTask,
+            completedTasks: state.completedTasks,
+          });
+        }
+      });
+  }
+
   pause() {
-    this.cleanUpSubscriptions();
+    this.service.pause();
   }
 
   resetPlayer() {
+    this.service.resetPlayer();
     this.setState({
       currentTime: 0,
-      currentTask: getTask(SAMPLE_PRESET, 0),
-      nextTask: getNextTask(SAMPLE_PRESET, 0),
+      currentTask: this.service.currentTask,
+      nextTask: this.service.nextTask,
+    });
+  }
+
+  restartTask() {
+    this.service.restartTask();
+    this.setState({
+      currentTime: this.service.currentTask.start
     });
   }
 
   stop() {
-    this.cleanUpSubscriptions();
+    this.pause();
     this.resetPlayer();
-  }
-
-  isTaskCompleted(lastTask, currentTask) {
-    return (lastTask !== null && currentTask == null)
-      || (lastTask.name !== currentTask.name);
   }
 }
 

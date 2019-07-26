@@ -29,7 +29,7 @@ export function getTaskIndex(tasks, time) {
 }
 
 
-export function getTask(tasks, time) {
+export function getTaskByTime(tasks, time) {
   if (time === 0) {
     return tasks[0];
   }
@@ -40,7 +40,7 @@ export function getTask(tasks, time) {
     : null;
 }
 
-export function getNextTask(tasks, time) {
+export function getNextTaskByTime(tasks, time) {
   if (tasks.length <= 1) {
     return null;
   }

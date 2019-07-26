@@ -2,9 +2,9 @@ import React from 'react';
 
 import './TaskLog.css';
 
-const createTask = ({duration, name}) => {
+const createTask = ({duration, name}, index) => {
   return (
-    <li className="task">
+    <li className="task" key={`${index}-logged-task`}>
       <div className="duration">{ duration }</div>
       <div className="name">{ name }</div>
     </li>

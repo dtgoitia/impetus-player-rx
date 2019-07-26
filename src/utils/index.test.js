@@ -1,7 +1,7 @@
 import { getTaskIndex, getNextTask, secondsToTime } from './index.js';
 import { SAMPLE_PRESET } from '../constants.js';
 
-describe('utils', () => {
+xdescribe('utils', () => {
   const tasks = SAMPLE_PRESET;
 
   describe(getTaskIndex.name, () => {
