@@ -28,7 +28,6 @@ export function getTaskIndex(tasks, time) {
   return null;
 }
 
-
 export function getTaskByTime(tasks, time) {
   if (time === 0) {
     return tasks[0];
@@ -57,6 +56,22 @@ export function getNextTaskByTime(tasks, time) {
   }
 
   return null;
+}
+
+export function isTaskCompleted(lastTask, currentTask) {
+  if (lastTask === null) {
+    return false;
+  }
+
+  if (currentTask === null) {
+    return true;
+  }
+
+  if (lastTask.name !== currentTask.name) {
+    return true;
+  }
+
+  return false;
 }
 
 export function secondsToTime(totalSeconds) {

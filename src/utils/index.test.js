@@ -1,5 +1,11 @@
-import { getTaskIndex, getNextTask, secondsToTime } from './index.js';
+import {
+  getTaskIndex,
+  getNextTask,
+  secondsToTime,
+  isTaskCompleted,
+} from './index.js';
 import { SAMPLE_PRESET } from '../constants.js';
+import TestHelper from './test-helper.js';
 
 xdescribe('utils', () => {
   const tasks = SAMPLE_PRESET;
@@ -60,6 +66,44 @@ xdescribe('utils', () => {
       expect(getNextTask(tasks, 9)).toEqual(null);
       expect(getNextTask(tasks, 10)).toEqual(null);
       expect(getNextTask(tasks, 11)).toEqual(null);
+    });
+  });
+
+  describe(isTaskCompleted.name, () => {
+    describe('when the last task is null (before starting the preset)', () => {
+      it('should return false', () => {
+        const lastTask = null;
+        const currentTask = TestHelper.createTask({});
+        const result = isTaskCompleted(lastTask, currentTask);
+        expect(result).toBe(false);
+      });
+    });
+    
+    describe('when the current task is null (preset has just finished)', () => {
+      it('should return false', () => {
+        const lastTask = TestHelper.createTask({});
+        const currentTask = null;
+        const result = isTaskCompleted(lastTask, currentTask);
+        expect(result).toBe(true);
+      });
+    });
+
+    describe('when the current task is the same as the previous task', () => {
+      it('should return false', () => {
+        const lastTask = TestHelper.createTask({name: 'last'});
+        const currentTask = lastTask;
+        const result = isTaskCompleted(lastTask, currentTask);
+        expect(result).toBe(false);
+      });
+    });
+
+    describe('when the current task is the different to the previous task', () => {
+      it('should return true', () => {
+        const lastTask = TestHelper.createTask({name: 'last'});
+        const currentTask = TestHelper.createTask({name: 'current'});
+        const result = isTaskCompleted(lastTask, currentTask);
+        expect(result).toBe(true);
+      });
     });
   });
 

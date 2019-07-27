@@ -38,5 +38,12 @@ export const SAMPLE_PRESET_INFLATED = [
   },
 ];
 
+export const TEMPLATE_INFLATED_TASK = {
+  name: 'task name',
+  duration: 7,
+  start: 2,
+  end: 9,
+}
+
 export const MILLISECONDS_PER_SECOND = 1000;
 export const PLAYER_STEPS_PER_SECOND = 20;

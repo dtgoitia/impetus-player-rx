@@ -1,5 +1,14 @@
-import { getTaskByTime, calculateDuration, getNextTaskByTime } from "../utils";
-import { MILLISECONDS_PER_SECOND, PLAYER_STEPS_PER_SECOND, SAMPLE_PRESET } from "../constants";
+import {
+  getTaskByTime,
+  calculateDuration,
+  getNextTaskByTime,
+  isTaskCompleted
+} from "../utils";
+import {
+  MILLISECONDS_PER_SECOND,
+  PLAYER_STEPS_PER_SECOND,
+  SAMPLE_PRESET
+} from "../constants";
 
 import { timer, Subject } from 'rxjs';
 import { map, takeUntil, tap } from 'rxjs/operators';
@@ -17,11 +26,6 @@ function inflateTasks(rawTasks) {
       lastTime = end;
       return { ...task, start, end };
     });
-}
-
-function isTaskCompleted(lastTask, currentTask) {
-  return (lastTask !== null && currentTask == null)
-    || (lastTask.name !== currentTask.name);
 }
 
 function createTimerFrom(startTime) {
