@@ -1,7 +1,7 @@
 import React from 'react';
 
 import Button from './Button';
-import playerService from './../player-service';
+import { playerService } from './../player-service';
 import './Buttons.css';
 
 export default class Buttons extends React.Component {

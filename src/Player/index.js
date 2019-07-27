@@ -2,7 +2,7 @@ import React from 'react';
 
 import { secondsToTime } from './../utils';
 import Buttons from './Buttons';
-import playerService from './player-service';
+import { playerService } from './player-service';
 import ProgressBar from './ProgressBar';
 import TaskLog from './TaskLog';
 import './Player.css';

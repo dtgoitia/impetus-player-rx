@@ -24,11 +24,14 @@ function isTaskCompleted(lastTask, currentTask) {
     || (lastTask.name !== currentTask.name);
 }
 
-function createTimerFrom(startTime) {
+function createTimerFrom(startTime, scheduler) {
   const millisecondsPerStep = MILLISECONDS_PER_SECOND / PLAYER_STEPS_PER_SECOND;
 
-  return timer(0, millisecondsPerStep)
+  return timer(0, millisecondsPerStep, scheduler)
     .pipe(
+      tap(stepIndex => {
+        console.log(stepIndex);
+      }),
       map(stepIndex => startTime + stepIndex / PLAYER_STEPS_PER_SECOND),
     );
 }
@@ -42,10 +45,15 @@ class PlayerService {
   playing = false;
   presetDuration;
   tasks = [];
-  constructor(rawTasks) {
+
+  _timer;
+
+  constructor(rawTasks, timer$) {
     if (!tasksAreValid(rawTasks)) {
       throw TypeError('Tasks are not valid');
     }
+
+    this._timer = timer;
 
     this._stopTimer$ = new Subject();
     this.stopTimer$ = this._stopTimer$.asObservable();
@@ -76,7 +84,9 @@ class PlayerService {
       this.endReached = false;
     }
 
-    const timer$ = createTimerFrom(this.currentTime)
+    const timer$ = this._timer$
+      ? this._timer$
+      : createTimerFrom(this.currentTime);
 
     this.timerState$ = timer$
       .pipe(
@@ -131,4 +141,7 @@ class PlayerService {
 
 const playerService = new PlayerService(SAMPLE_PRESET);
 
-export default playerService;
+export {
+  PlayerService,
+  playerService,
+};
