@@ -10,7 +10,7 @@ import {
   SAMPLE_PRESET
 } from "../constants";
 
-import { timer, Subject, BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, Subject, timer } from 'rxjs';
 import { map, takeUntil } from 'rxjs/operators';
 
 function tasksAreValid(tasks) {
@@ -37,21 +37,42 @@ function createTimerFrom(startTime) {
     );
 }
 
+function reduceNewState(time, oldState) {
+  const lastTask = oldState.currentTask;
+  const previouslyCompletedTasks = oldState.completedTasks;
+  const currentTask = getTaskByTime(oldState.tasks, time);
+  const nextTask = getNextTaskByTime(oldState.tasks, time);
+  const completedTasks = isTaskCompleted(lastTask, currentTask)
+    ? [...previouslyCompletedTasks, lastTask]
+    : previouslyCompletedTasks;
+  const endReached = currentTask === null
+    ? true
+    : false;
+  const newState = endReached
+    ? {
+        ...oldState,
+        completedTasks,
+        endReached,
+      }
+    : {
+        ...oldState,
+        currentTime: time,
+        currentTask,
+        nextTask,
+        completedTasks,
+        endReached,
+      };
+  
+  return newState;
+}
+
 class PlayerService {
-  completedTasks = [];
-  currentTask = null;
-  currentTime = 0;
-  endReached = false;
-  nextTask = null;
-  playing = false;
-  // presetDuration;
-  tasks = [];
   constructor(rawTasks) {
     if (!tasksAreValid(rawTasks)) {
       throw TypeError('Tasks are not valid');
     }
 
-    this._isPlaying$ = new Subject();
+    this._isPlaying$ = new BehaviorSubject(false);
 
     this._killTimer$ = new Subject();
     this._killTimer$.subscribe(() => {
@@ -108,50 +129,12 @@ class PlayerService {
     this._subscription = timer$
       .pipe(takeUntil(this._killTimer$))
       .subscribe(time => {
-        const oldState = this.state;
-
-        // TODO: stick this in a function =============================
-        // function reduceNewState(time, oldState) { }
-        const lastTask = oldState.currentTask;
-        const previouslyCompletedTasks = oldState.completedTasks;
-        const currentTask = getTaskByTime(oldState.tasks, time);
-        const nextTask = getNextTaskByTime(oldState.tasks, time);
-        const completedTasks = isTaskCompleted(lastTask, currentTask)
-          ? [...previouslyCompletedTasks, lastTask]
-          : previouslyCompletedTasks;
-        const endReached = currentTask === null
-          ? true
-          : false;
-        
-        const newState = endReached
-          ? {
-              ...oldState,
-              completedTasks,
-              endReached,
-            }
-          : {
-              ...oldState,
-              currentTime: time,
-              currentTask,
-              nextTask,
-              completedTasks,
-              endReached,
-            };
-        // TODO: stick this in a function =============================
-
+        const newState = reduceNewState(time, this.state);
         this._state$.next(newState);
         if (newState.endReached) {
           this._killTimer();
         }
       });
-
-    this._state$.subscribe(newState => {
-      this.currentTask = newState.currentTask;
-      this.currentTime = newState.time;
-      this.nextTask = newState.nextTask;
-      this.completedTasks = newState.completedTasks;
-      this.endReached = newState.endReached;
-    })
   }
 
   previous() {

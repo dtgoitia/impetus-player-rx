@@ -8,13 +8,8 @@ import TaskLog from './TaskLog';
 import './Player.css';
 
 class Player extends React.Component {
-  constructor(props) {
-    super(props);
-    this.service = playerService;
-  }
-
   componentWillMount() {
-    this.subscription = this.service.state$.subscribe(newState => {
+    this.subscription = playerService.state$.subscribe(newState => {
       this.setState({ ...newState });
     });
   }
@@ -75,27 +70,27 @@ class Player extends React.Component {
   }
 
   next() {
-    this.service.next();
+    playerService.next();
   }
 
   pause() {
-    this.service.pause();
+    playerService.pause();
   }
 
   play() {
-    this.service.play();
+    playerService.play();
   }
 
   previous() {
-    this.service.previous();
+    playerService.previous();
   }
 
   resetPlayer() {
-    this.service.resetPlayer();
+    playerService.resetPlayer();
   }
 
   restartTask() {
-    this.service.restartTask();
+    playerService.restartTask();
   }
 
   stop() {

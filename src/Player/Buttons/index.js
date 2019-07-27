@@ -5,19 +5,31 @@ import playerService from './../player-service';
 import './Buttons.css';
 
 export default class Buttons extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = { isPlaying: false };
+  componentWillMount() {
+    const stateSubscription = playerService.state$.subscribe(newState => {
+      this.setState({ ...newState });
+    });
 
-    this.playerServiceSubscription = playerService
-      .isPlaying$
-      .subscribe(isPlaying => {
-        this.setState({ isPlaying });
-      });
+    const isPlayingSubscription = playerService.isPlaying$.subscribe(isPlaying => {
+      this.setState({ isPlaying });
+    });
+
+    this.subscription = [
+      stateSubscription,
+      isPlayingSubscription,
+    ]
+  }
+
+  cleanUpSubscriptions() {
+    this.subscription.forEach(subscription => {
+      if (!!subscription && !subscription.closed) {
+        subscription.unsubscribe();
+      }
+    });
   }
 
   componentWillUnmount() {
-    this.playerServiceSubscription.unsubscribe();
+    this.cleanUpSubscriptions();
   }
 
   render() {
