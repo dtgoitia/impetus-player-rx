@@ -2,6 +2,7 @@ import React from 'react';
 
 import Button from './Button';
 import playerService from './../player-service';
+import SpeechService from '../../speech-service';
 import './Buttons.css';
 
 export default class Buttons extends React.Component {
@@ -32,6 +33,10 @@ export default class Buttons extends React.Component {
     this.cleanUpSubscriptions();
   }
 
+  testSpeak() {
+    SpeechService.countDown(3, 'go!');
+  }
+
   render() {
     const playPauseButton = this.state.isPlaying
       ? <Button action={this.props.pause}>PAUSE</Button>
@@ -55,6 +60,7 @@ export default class Buttons extends React.Component {
         <div className="Buttons">
           <Button action={this.props.previous}>PREVIOUS</Button>
           <Button action={this.props.next}>NEXT</Button>
+          <Button action={this.testSpeak.bind(this)}>3, 2, 1... GO!</Button>
         </div>
       </React.Fragment>
     );
