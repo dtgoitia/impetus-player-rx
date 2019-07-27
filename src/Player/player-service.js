@@ -121,11 +121,13 @@ class PlayerService {
     this.currentTime = 0;
     this.currentTask = getTaskByTime(this.tasks, 0);
     this.nextTask = getNextTaskByTime(this.tasks, 0);
+    this.endReached = false;
   }
 
   restartTask() {
     this.pause();
     this.currentTime = this.currentTask.start;
+    this.endReached = false;
   }
 }
 

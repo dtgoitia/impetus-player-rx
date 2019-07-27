@@ -58,6 +58,7 @@ class Player extends React.Component {
           duration={this.state.presetDuration} />
 
         <Buttons
+          endReached={this.state.endReached}
           pause={this.pause.bind(this)}
           play={this.play.bind(this)}
           stop={this.stop.bind(this)}
@@ -86,6 +87,8 @@ class Player extends React.Component {
             nextTask: state.nextTask,
             completedTasks: state.completedTasks,
           });
+        } else {
+          this.setState({ endReached: true });
         }
       });
   }
@@ -100,13 +103,15 @@ class Player extends React.Component {
       currentTime: 0,
       currentTask: this.service.currentTask,
       nextTask: this.service.nextTask,
+      endReached: this.service.endReached,
     });
   }
 
   restartTask() {
     this.service.restartTask();
     this.setState({
-      currentTime: this.service.currentTask.start
+      currentTime: this.service.currentTask.start,
+      endReached: this.service.endReached,
     });
   }
 

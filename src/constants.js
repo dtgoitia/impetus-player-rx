@@ -1,14 +1,18 @@
 export const SAMPLE_PRESET = [
   {
     name: 'task 1',
-    duration: 3,
+    duration: 1,
   },
   {
     name: 'task 2',
-    duration: 5,
+    duration: 1,
   },
   {
     name: 'task 3',
+    duration: 5,
+  },
+  {
+    name: 'task 4',
     duration: 2,
   },
 ];
