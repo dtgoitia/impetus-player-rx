@@ -11,15 +11,12 @@ class Player extends React.Component {
   constructor(props) {
     super(props);
     this.service = playerService;
-    this.state = {
-      tasks: this.service.task,
-      completedTasks: [],
-      currentTask: this.service.currentTask,
-      currentTime: 0,
-      presetDuration: this.service.presetDuration,
-      endReached: false,
-      nextTask: this.service.nextTask,
-    }
+  }
+
+  componentWillMount() {
+    this.subscription = this.service.state$.subscribe(newState => {
+      this.setState({ ...newState });
+    });
   }
 
   componentWillUnmount() {
@@ -62,7 +59,9 @@ class Player extends React.Component {
           pause={this.pause.bind(this)}
           play={this.play.bind(this)}
           stop={this.stop.bind(this)}
-          restart={this.restartTask.bind(this)} />
+          restart={this.restartTask.bind(this)}
+          previous={this.previous.bind(this)}
+          next={this.next.bind(this)} />
         
         <TaskLog tasks={this.state.completedTasks} />
       </div>
@@ -75,44 +74,28 @@ class Player extends React.Component {
     }
   }
 
-  play() {
-    this.service.play();
-    this.subscription = this.service
-      .timerState$
-      .subscribe(state => {
-        if (state) {
-          this.setState({
-            currentTime: state.time,
-            currentTask: state.currentTask,
-            nextTask: state.nextTask,
-            completedTasks: state.completedTasks,
-          });
-        } else {
-          this.setState({ endReached: true });
-        }
-      });
+  next() {
+    this.service.next();
   }
 
   pause() {
     this.service.pause();
   }
 
+  play() {
+    this.service.play();
+  }
+
+  previous() {
+    this.service.previous();
+  }
+
   resetPlayer() {
     this.service.resetPlayer();
-    this.setState({
-      currentTime: 0,
-      currentTask: this.service.currentTask,
-      nextTask: this.service.nextTask,
-      endReached: this.service.endReached,
-    });
   }
 
   restartTask() {
     this.service.restartTask();
-    this.setState({
-      currentTime: this.service.currentTask.start,
-      endReached: this.service.endReached,
-    });
   }
 
   stop() {

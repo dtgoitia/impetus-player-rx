@@ -30,6 +30,8 @@ export default class Buttons extends React.Component {
         { this.props.endReached ? null : playPauseButton }
         <Button action={this.props.stop}>STOP</Button>
         <Button action={this.props.restart}>RESTART TASK</Button>
+        <Button action={this.props.previous}>PREVIOUS</Button>
+        <Button action={this.props.next}>NEXT</Button>
       </div>
     );
   }

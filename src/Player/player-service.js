@@ -10,8 +10,8 @@ import {
   SAMPLE_PRESET
 } from "../constants";
 
-import { timer, Subject } from 'rxjs';
-import { map, takeUntil, tap } from 'rxjs/operators';
+import { timer, Subject, BehaviorSubject } from 'rxjs';
+import { map, takeUntil } from 'rxjs/operators';
 
 function tasksAreValid(tasks) {
   return true;  // TODO: implement
@@ -20,11 +20,11 @@ function tasksAreValid(tasks) {
 function inflateTasks(rawTasks) {
   let lastTime = 0;
   return rawTasks
-    .map(task => {
+    .map((task, i) => {
       const start = lastTime;
       const end = lastTime + task.duration;
       lastTime = end;
-      return { ...task, start, end };
+      return { id: i, ...task, start, end };
     });
 }
 
@@ -44,32 +44,56 @@ class PlayerService {
   endReached = false;
   nextTask = null;
   playing = false;
-  presetDuration;
+  // presetDuration;
   tasks = [];
   constructor(rawTasks) {
     if (!tasksAreValid(rawTasks)) {
       throw TypeError('Tasks are not valid');
     }
 
-    this._stopTimer$ = new Subject();
-    this.stopTimer$ = this._stopTimer$.asObservable();
-    this._stopTimer$.subscribe(() => {
+    this._isPlaying$ = new Subject();
+
+    this._killTimer$ = new Subject();
+    this._killTimer$.subscribe(() => {
+      this.cleanUpSubscription();
       this._isPlaying$.next(false);
     });
 
-    this._isPlaying$ = new Subject();
-    this.isPlaying$ = this._isPlaying$.asObservable();
-    this._isPlaying$.subscribe(isPlaying => {
-      this.playing = isPlaying;
+    const tasks = inflateTasks(rawTasks);
+    const presetDuration = calculateDuration(tasks);
+    const currentTask = getTaskByTime(tasks, 0);
+    const nextTask = getNextTaskByTime(tasks, 0);
+    const initialState = {
+      tasks,
+      presetDuration,
+      currentTime: 0,
+      currentTask,
+      nextTask,
+      completedTasks: [],
+      endReached: false,
+    };
+    this._state$ = new BehaviorSubject(initialState);
+    this._state$.subscribe(state => {
+      this.state = state;
     });
-    
-    this.tasks = inflateTasks(rawTasks);
-    this.presetDuration = calculateDuration(this.tasks);
-    this.resetPlayer();
+  }
+
+  get isPlaying$() { return this._isPlaying$.asObservable(); }
+
+  get state$() { return this._state$.asObservable(); }
+
+  cleanUpSubscription() {
+    if (!!this._subscription && !this._subscription.closed) {
+      this._subscription.unsubscribe();
+    }
+  }
+
+  next() {
+    this._jumpToTaskByIndex(this.state.currentTask.id + 1);
   }
 
   pause() {
-    this._stopTimer$.next();
+    this._killTimer();
   }
 
   play() {
@@ -80,58 +104,111 @@ class PlayerService {
       this.endReached = false;
     }
 
-    const timer$ = createTimerFrom(this.currentTime)
+    const timer$ = createTimerFrom(this.state.currentTime)
+    this._subscription = timer$
+      .pipe(takeUntil(this._killTimer$))
+      .subscribe(time => {
+        const oldState = this.state;
 
-    this.timerState$ = timer$
-      .pipe(
-        map(time => {
-          const currentTask = getTaskByTime(this.tasks, time);
-          if (currentTask) {
-            return { time, currentTask };
-          }
-          this.endReached = true;
-          return null;
-        }),
-        map(data => {
-          if (data === null) return null;
-          const { time, currentTask } = data;
-          const lastTask = this.currentTask;
-          const nextTask = getNextTaskByTime(this.tasks, time);
-          const previouslyCompletedTasks = this.completedTasks;
+        // TODO: stick this in a function =============================
+        // function reduceNewState(time, oldState) { }
+        const lastTask = oldState.currentTask;
+        const previouslyCompletedTasks = oldState.completedTasks;
+        const currentTask = getTaskByTime(oldState.tasks, time);
+        const nextTask = getNextTaskByTime(oldState.tasks, time);
+        const completedTasks = isTaskCompleted(lastTask, currentTask)
+          ? [...previouslyCompletedTasks, lastTask]
+          : previouslyCompletedTasks;
+        const endReached = currentTask === null
+          ? true
+          : false;
+        
+        const newState = endReached
+          ? {
+              ...oldState,
+              completedTasks,
+              endReached,
+            }
+          : {
+              ...oldState,
+              currentTime: time,
+              currentTask,
+              nextTask,
+              completedTasks,
+              endReached,
+            };
+        // TODO: stick this in a function =============================
 
-          const completedTasks = isTaskCompleted(lastTask, currentTask)
-            ? [...previouslyCompletedTasks, lastTask]
-            : previouslyCompletedTasks;
+        this._state$.next(newState);
+        if (newState.endReached) {
+          this._killTimer();
+        }
+      });
 
-          return {
-            time,
-            currentTask,
-            nextTask,
-            completedTasks,
-          };
-        }),
-        tap(data => {
-          if (!data) return;
-          this.currentTime = data.time;
-          this.currentTask = data.currentTask;
-          this.completedTasks = data.completedTasks;
-        }),
-        takeUntil(this._stopTimer$),
-      );
+    this._state$.subscribe(newState => {
+      this.currentTask = newState.currentTask;
+      this.currentTime = newState.time;
+      this.nextTask = newState.nextTask;
+      this.completedTasks = newState.completedTasks;
+      this.endReached = newState.endReached;
+    })
+  }
+
+  previous() {
+    let targetIndex = this.state.currentTask.id - 1;
+    if (this.state.endReached) {
+      targetIndex++;
+    }
+    if (this.state.currentTask.id === 0) {
+      targetIndex = 0;
+    }
+    this._jumpToTaskByIndex(targetIndex);
   }
 
   resetPlayer() {
-    this._stopTimer$.next();
-    this.currentTime = 0;
-    this.currentTask = getTaskByTime(this.tasks, 0);
-    this.nextTask = getNextTaskByTime(this.tasks, 0);
-    this.endReached = false;
+    this.pause();
+    this._setCurrentTaskByIndex(0);
   }
 
   restartTask() {
     this.pause();
-    this.currentTime = this.currentTask.start;
-    this.endReached = false;
+    this._setCurrentTaskByIndex(this.state.currentTask.id);
+  }
+
+  _jumpToTaskByIndex(index) {
+    this.pause();
+    this._setCurrentTaskByIndex(index);
+  }
+
+  _killTimer() {
+    this._killTimer$.next();
+  }
+
+  _setCurrentTaskByIndex(index) {
+    const tasks = this.state.tasks;
+    const task = tasks[index];
+    const lastTask = tasks[tasks.length - 1];
+    const newState = {
+      ...this.state,
+      currentTask: task
+        ? task
+        : lastTask,
+      currentTime: task
+        ? task.start
+        : lastTask.end,
+      endReached: task
+        ? false
+        : true,
+    };
+    
+    const nextTask = tasks[index + 1];
+    if (nextTask === undefined) {
+      newState.nextTask = null;
+    } else {
+      newState.nextTask = nextTask;
+    }
+
+    this._state$.next(newState);
   }
 }
 
