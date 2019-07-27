@@ -28,10 +28,15 @@ class Player extends React.Component {
 
   render() {
     const formattedTime = secondsToTime(this.state.currentTime);
-    const progress = this.state.currentTime / this.state.presetDuration;
+    const presetProgress = this.state.currentTime / this.state.presetDuration;
+    const currentProgress = (this.state.currentTime - this.state.currentTask.start) / this.state.currentTask.duration;
 
     return (
       <div className="Player">
+        <ProgressBar
+          progress={currentProgress}
+          duration={this.state.currentTask.duration} />
+
         <div className="current-task">
           { this.state.currentTask.name }
         </div>
@@ -48,7 +53,9 @@ class Player extends React.Component {
           }
         </div>
 
-        <ProgressBar progress={progress} />
+        <ProgressBar
+          progress={presetProgress}
+          duration={this.state.presetDuration} />
 
         <Buttons
           pause={this.pause.bind(this)}

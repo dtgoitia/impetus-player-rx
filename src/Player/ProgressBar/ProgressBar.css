@@ -8,9 +8,28 @@
   height: var(--bar-height);
   margin: .5em;
   overflow: hidden;
+  position: relative;  /* required to overlay the duration over the bar */
 }
 
 .ProgressBar-bar {
   background-color: grey;
   height: var(--bar-height);
+}
+
+.ProgressBar-completed {
+  color: white;
+  position: absolute;
+  top: 0;
+  left: 1em;
+  line-height: var(--bar-height);
+  z-index: 10;
+}
+
+.ProgressBar-remaining {
+  color: white;
+  position: absolute;
+  top: 0;
+  right: 1em;
+  line-height: var(--bar-height);
+  z-index: 10;
 }
