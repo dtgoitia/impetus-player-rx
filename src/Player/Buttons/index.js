@@ -2,8 +2,9 @@ import React from 'react';
 
 import Button from './Button';
 import playerService from './../player-service';
-import SpeechService from '../../speech-service';
+import SpeechService from '../../services/speech-service';
 import './Buttons.css';
+import BeepService from '../../services/beep-service';
 
 export default class Buttons extends React.Component {
   componentWillMount() {
@@ -31,6 +32,10 @@ export default class Buttons extends React.Component {
 
   componentWillUnmount() {
     this.cleanUpSubscriptions();
+  }
+
+  testBeep() {
+    BeepService.countDown(2);
   }
 
   testSpeak() {
@@ -61,6 +66,7 @@ export default class Buttons extends React.Component {
           <Button action={this.props.previous}>PREVIOUS</Button>
           <Button action={this.props.next}>NEXT</Button>
           <Button action={this.testSpeak.bind(this)}>3, 2, 1... GO!</Button>
+          <Button action={this.testBeep.bind(this)}>BEEP</Button>
         </div>
       </React.Fragment>
     );

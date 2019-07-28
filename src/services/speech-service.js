@@ -1,5 +1,6 @@
-import { timer, concat } from "rxjs";
-import { take, map } from "rxjs/operators";
+import { concat } from "rxjs";
+import { countDownTimer } from "./countdown";
+import { map } from "rxjs/operators";
 
 const speechEnabled = window.speechSynthesis.getVoices().length > 0;
 
@@ -18,10 +19,8 @@ class SpeechService {
   }
 
  static countDown(start, zeroMessage = null) {
-    const countDown$ = timer(0, 1000)
+   const countDownWithZeroMessage$ = countDownTimer(start)
       .pipe(
-        take(start + 1),
-        map(time => start - time),
         map(count => {
           return count === 0 && zeroMessage
             ? zeroMessage
@@ -29,7 +28,7 @@ class SpeechService {
         }),
       );
     
-    concat(countDown$)
+    concat(countDownWithZeroMessage$)
       .subscribe(this.say);
   }
 }
