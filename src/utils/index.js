@@ -74,7 +74,7 @@ export function isTaskCompleted(lastTask, currentTask) {
   return false;
 }
 
-export function secondsToTime(totalSeconds) {
+export function secondsToTime(totalSeconds, fancy = false) {
   const pad = number => `0${number}`.slice(-2);
   let secondsLeft = totalSeconds;
 
@@ -84,8 +84,20 @@ export function secondsToTime(totalSeconds) {
   const minutes = Math.floor(secondsLeft / SECONDS_PER_MINUTE);
   secondsLeft = secondsLeft - minutes * SECONDS_PER_MINUTE;
 
-  const seconds = Math.floor(secondsLeft);
+  const seconds = Math.ceil(secondsLeft);
   
+  if (fancy) {
+    if (hours > 0) {
+      return `${hours}h ${minutes}m ${seconds}s`;
+    }
+    if (minutes > 0) {
+      return `${minutes}m ${seconds}s`;
+    }
+    if (seconds > 0) {
+      return `${seconds}s`;
+    }
+  }
+
   return hours > 0
     ? `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`
     : `${pad(minutes)}:${pad(seconds)}`;

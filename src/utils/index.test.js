@@ -108,19 +108,43 @@ xdescribe('utils', () => {
   });
 
   describe(secondsToTime.name, () => {
-    it('should format times over 1h', () => {
-      const timeLongerThanHour = 3601;
-      expect(secondsToTime(timeLongerThanHour)).toEqual("01:00:01");
+    describe('when fancy is false', () => {
+      it('should format times over 1h', () => {
+        const timeLongerThanHour = 3601;
+        expect(secondsToTime(timeLongerThanHour)).toEqual("01:00:01");
+      });
+  
+      it('should format times under 1h', () => {
+        const timeShorterThanHour = 131;
+        expect(secondsToTime(timeShorterThanHour)).toEqual("02:11");
+      });
+  
+      it('should format times with below-second precision', () => {
+        const timeWithSecondFractions = 3.7;
+        expect(secondsToTime(timeWithSecondFractions)).toEqual("00:03");
+      });
     });
 
-    it('should format times under 1h', () => {
-      const timeShorterThanHour = 131;
-      expect(secondsToTime(timeShorterThanHour)).toEqual("02:11");
-    });
+    describe('when fancy is true', () => {
+      it('should format times over 1h', () => {
+        const timeLongerThanHour = 3601;
+        expect(secondsToTime(timeLongerThanHour, true)).toEqual("1h 0m 1s");
+      });
+  
+      it('should format times under 1h', () => {
+        const timeShorterThanHour = 131;
+        expect(secondsToTime(timeShorterThanHour, true)).toEqual("2m 11s");
+      });
 
-    it('should format times with below-second precision', () => {
-      const timeWithSecondFractions = 3.7;
-      expect(secondsToTime(timeWithSecondFractions)).toEqual("00:03");
+      it('should format times under a minute', () => {
+        const timeWithSecondFractions = 13;
+        expect(secondsToTime(timeWithSecondFractions, true)).toEqual("13s");
+      });
+  
+      it('should format times with below-second precision', () => {
+        const timeWithSecondFractions = 3.7;
+        expect(secondsToTime(timeWithSecondFractions, true)).toEqual("3s");
+      });
     });
   });
 });

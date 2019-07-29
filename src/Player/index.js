@@ -19,9 +19,17 @@ class Player extends React.Component {
   }
 
   render() {
-    const formattedTime = secondsToTime(this.state.currentTime);
+    const remainingTaskTime = this.state.currentTask.end
+      - (this.state.currentTime < this.state.currentTask.start
+          ? this.state.currentTask.start
+          : this.state.currentTime
+    );
+    const remainingTaskTimeFormatted = secondsToTime(remainingTaskTime, true);
     const presetProgress = this.state.currentTime / this.state.presetDuration;
     const currentProgress = (this.state.currentTime - this.state.currentTask.start) / this.state.currentTask.duration;
+    const nextTaskDescription = this.state.nextTask === null
+      ? 'none'
+      : `${this.state.nextTask.name} (${secondsToTime(this.state.nextTask.duration, true)})`
 
     return (
       <div className="Player">
@@ -34,15 +42,11 @@ class Player extends React.Component {
         </div>
 
         <div className="current-time">
-          { formattedTime }
+          { remainingTaskTimeFormatted }
         </div>
 
         <div className="next-task">
-          Next: {
-            this.state.nextTask === null
-              ? 'none'
-              : this.state.nextTask.name
-          }
+          Next: { nextTaskDescription }
         </div>
 
         <ProgressBar
