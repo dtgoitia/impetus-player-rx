@@ -18,8 +18,8 @@ class SpeechService {
     }
   }
 
- static countDown(start, zeroMessage = null) {
-   const countDownWithZeroMessage$ = countDownTimer(start)
+  static countDown(start, zeroMessage = null) {
+    const countDownWithZeroMessage$ = countDownTimer(start)
       .pipe(
         map(count => {
           return count === 0 && zeroMessage
