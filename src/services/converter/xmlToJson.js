@@ -1,15 +1,11 @@
 import conver from 'xml-js';
-import errors from './errors';
-import { objectFromEntries } from '../utils/iter';
-import { stringToNumber, stringToBoolean } from '../utils/cast';
+import errors from '../errors';
+import { objectFromEntries } from '../../utils/iter';
+import { stringToNumber, stringToBoolean } from '../../utils/cast';
+import { NodeType } from './constants';
 
-const NodeType = {
-  BTIMER: 'btimer',
-  LOOP: 'loop',
-  PRESET: 'preset',
-}
 const ATTRIBUTES = '_attributes';
-const AttributeType = {
+export const AttributeType = {
   DESCRIPTION: 'desc',
   PAUSE: 'pause',
   ROUNDS: 'rounds',
@@ -99,7 +95,7 @@ function tweakRecursive(json, typeAsArg = null) {
   }
 }
 
-export function xmlToJson(xml) {
+export default function xmlToJson(xml) {
   const json = conver.xml2js(xml, {compact: true});
   return tweakRecursive(json);
 }
